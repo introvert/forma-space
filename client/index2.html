@@ -28,43 +28,35 @@
       </form>
     </div>
 
-    <!-- users online -->
-    <div class="mx-auto mt-10 mb-10">
-      <h3>5 users online</h3>
-      <div class="bg-blue-400 text-white p-2 rounded-2xl inline-block">
-        spaceship
-      </div>
-    </div>
+    <!-- chat elements -->
+    <div class="" v-show="userLoggedIn">
 
-    <!-- chat history -->
-    <div class="mx-auto space-y-2 grid grid-cols-1">
-
-      <div class="place-self-start">
-        <div class="bg-blue-400 text-white p-2 rounded-2xl inline-block">
-          spaceship
-        </div>
-        <div class="bg-gray-800 text-white p-2 rounded-2xl inline-block">
-          Hey, there! It's been a while! how far does this go
-        </div>
+      <!-- users online -->
+      <div class="mx-auto mt-10 mb-10">
+        <h3>x users online</h3>
+        <ul>
+          <li v-for="user in userList" class="bg-blue-400 text-white p-2 rounded-2xl inline-block">{{user}}</li>
+        </ul>
       </div>
 
-      <div class="place-self-start">
-        <div class="bg-blue-400 text-white p-2 rounded-2xl inline-block">
-          spaceship
-        </div>
-        <div class="bg-gray-800 text-white p-2 rounded-2xl inline-block">
-          Hey, there! It's been a while! how far does this go
-        </div>
+      <!-- chat hist -->
+      <ul class="mx-auto space-y-5 grid grid-cols-1">
+
+        <li v-for="data in messagesHist" class="text-white">
+          <span class="bg-blue-400 p-2 rounded-2xl">{{data.userName}}</span>
+          <span class="bg-gray-800 p-2 rounded-2xl">{{data.message}}</span>
+        </li>
+
+      </ul>
+
+      <!-- form -->
+      <div class="mx-auto mt-10">
+        <form v-on:submit.prevent="sendMessage(message)">
+          <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" type="text" v-model="message" name="message" placeholder="Type your message..." />
+          <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit" @click="sendMessage(message)">Send</button>
+        </form>
       </div>
 
-    </div>
-
-    <!-- form -->
-    <div class="mx-auto mt-10">
-      <form>
-        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" type="text" placeholder="Type your message..." />
-        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">Send</button>
-      </form>
     </div>
 
   </div>
