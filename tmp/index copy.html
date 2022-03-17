@@ -10,7 +10,7 @@
   <title>LSD Visualizer - The new visual music experience.</title>
   <meta name="theme-color" content="#000000">
   <meta name="description" content="The new music visual experience. Because all kids need RGB visualisations.">
-  <meta property="og:title" content="LSD music live visualizer">
+  <meta property="og:title" content="LSD live music visualizer">
   <meta property="og:description"
     content="The new music visual experience. Because all kids need RGB visualisations.">
   <meta property="og:type" content="website">
@@ -32,10 +32,7 @@
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
 
-    gtag('config', 'UA-122759633-1', {
-      'page_title' : 'LSD player',
-      'page_path': '/lsd'
-    });
+    gtag('config', 'UA-122759633-1');
   </script>
 
   <style>
@@ -74,42 +71,22 @@
     h1 {
       text-transform: uppercase;
     }
-
-    #bgvideo {
-      position: fixed;
-      right: 0;
-      bottom: 0;
-      min-width: 100%;
-      min-height: 100%;
-      z-index: -1;
-      opacity: 0.5;
-      object-fit: cover;
-    }
-
-    .mainhl {
-      margin-top: 200px;
-      margin-bottom: 200px !important;
-    }
   </style>
 
 </head>
 
 <body class="bg-black text-white">
-  <video autoplay muted loop id="bgvideo">
-    <source src="video.mp4" type="video/mp4">
-  </video>
-
-  <div class="max-w-8xl mx-auto px-4 px-6 mt-20">
-    <h1 class="text-6xl md:text-9xl max-w-full font-extrabold mb-5 rainbow mainhl">Meet the new LSD-like music listening experience.</h1>
+  <div class="max-w-6xl mx-auto px-4 px-6 mt-20">
+    <h1 class="text-5xl md:text-8xl max-w-full font-extrabold mb-3 rainbow">Embrace the new LSD-like music listening experience.</h1>
     <!--
       <h1 class="text-8xl font-extrabold mb-3 rainbow">Embrace the new LSD-like music listening experience.</h1>
     -->
-    <h2 class="text-3xl md:text-4xl mb-8">We are in 2022, but still fighting wars and streaming music on boring players that haven't changed in the last 10 years.</h2>
-    <h2 class="text-3xl md:text-4xl mb-8">It's time for a change in how we listen and sense music.</p>
-    <h2 class="text-3xl md:text-4xl mb-8">
+    <h2 class="text-3xl mb-5">We are in 2022, but still fighting wars and streaming music on boring players that haven't changed in the last 10 years.</h2>
+    <h2 class="text-3xl mb-5">It's time for a change in how we listen and sense music.</p>
+    <h2 class="text-3xl mb-5">
       Meet interactive audio-reactive music player with live visuals
       generated using the top curated independent electronic music on Formaviva.</h2>
-    
+    <h2 class="text-3xl mb-5">Submerge yourself with an interactive underground party experience with a single click.</h2>
     <button class="bg-indigo-600 hover:bg-indigo-700 font-bold py-4 px-10 rounded focus:outline-none"
       data-modal-toggle="apply-modal">Join the waiting
       list</button>
@@ -128,7 +105,7 @@
       </div>
       -->
 
-      <div class="md:flex md:mx-4 mt-10 md:pt-10">
+      <div class="md:flex md:mx-4 mt-10 md:pt-4">
         <div class="px-4 md:w-1/3 mt-6 md:mt-0">
           <div class="feature-box text-center p-4 md:p-6 max-w-sm mx-auto rounded md:h-full">
             <div class="text-3xl p-4 w-16 h-16 mx-auto">
@@ -161,20 +138,16 @@
   </div>
 
 
-  <div class="max-w-6xl mx-auto py-10 md:py-12">
+  <div class="max-w-6xl mx-auto py-6 md:py-12">
     <div class="container mx-auto">
 
       <div class="mx-4">
         <div class="text-center mx-auto">
-          <h1 class="mb-4 text-4xl md:text-7xl font-extrabold rainbow">Because all kids need RGB visualisations</h1>
-          <h2 class="text-4xl mb-8">Submerge yourself with an interactive underground party experience with a single click.</h2>
-          <p class="mb-4 text-3xl">Engage with the community.</p>
-          <p class="mb-4 text-3xl">Express your mood.</p>
-          <p class="mb-4 text-3xl">Share your tracks.</p>
-          <p class="mb-4 text-3xl">Participate in the premieres.</p>
-          <p class="mb-4 text-3xl">Explore and compliment taste of others.</p>
+          <h1 class="mb-4 text-4xl md:text-5xl font-extrabold rainbow">Because all kids need RGB visualisations</h1>
+          <p class="mb-4 text-xl">Engage with the community. Express your mood. Share your tracks. Participate in the
+            premieres. Explore and compliment taste of others.</p>
           <button
-            class="border-2 border-solid border-indigo-600 rounded py-2 px-12 font-bold text-white hover:bg-indigo-600 hover:text-white mt-4 transition-color duration-300"
+            class="border-2 border-solid border-indigo-600 rounded py-2 px-12 font-bold text-indigo-600 hover:bg-indigo-600 hover:text-white mt-4 transition-color duration-300"
             data-modal-toggle="apply-modal">Get early access</button>
         </div>
       </div>
@@ -353,18 +326,6 @@
       var referralEndpoint = "https://fvref.onrender.com"; // "https://0.0.0.0:3001";
 
       initReferral(referralEndpoint, shareDomain);
-    });
-
-    $(window).scroll(function() {
-      var scrollTop = $(this).scrollTop();
-      $('#bgvideo').css({
-        opacity: function() {
-          var elementHeight = $(this).height(),
-              opacity = 1 - ((1 - (elementHeight - scrollTop) / elementHeight) * 0.8) + 0.2;
-
-          return opacity;
-        }
-      });
     });
   </script>
 </body>

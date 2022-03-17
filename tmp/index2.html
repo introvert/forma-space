@@ -39,7 +39,7 @@
     <!-- chat hist -->
     <ul class="mx-auto space-y-5 grid grid-cols-1">
 
-      <li class="text-white">
+      <li v-for="data in messagesHist" class="text-white">
         <span class="bg-blue-400 p-2 rounded-2xl">spaceship</span>
         <span class="bg-gray-800 p-2 rounded-2xl">Hey, there! It's been a while! how far does this go</span>
       </li>
