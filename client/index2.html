@@ -1,70 +1,229 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Formaviva Space</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-black text-white">
-  <div id="app" class="container mx-auto">
-    <div>
-      <h2>Playing: {{track.data.attributes.display_name}}</h2>
-      <span>Time left: {{}}</span>
-    </div>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Formaviva Space</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <!-- login -->
-    <div class="w-full max-w-xs mx-auto" v-show="!userLoggedIn">
-      <form class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-        <label class="block text-gray-700 text-sm font-bold mb-2" for="username">
-          Username
-        </label>
-        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" v-model="userName" id="username" type="text" placeholder="Username">
-        <div class="flex items-center justify-between">
-          <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" @click="login(userName)" type="button">
-            Sign In
-          </button>
+    <link href="https://cdn.tailwindcss.com" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script type="text/javascript" src="https://unpkg.com/lodash"></script>
+    <script type="text/javascript" src="https://unpkg.com/butterchurn"></script>
+    <script type="text/javascript" src="https://unpkg.com/butterchurn-presets"></script>
+    <script type="text/javascript" src="https://unpkg.com/butterchurn-presets/lib/butterchurnPresetsExtra.min.js"></script>
+  </head>
+  <style>
+    #canvas {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    #canvas:-moz-full-screen {
+      width: 100%;
+      height: 100%;
+    }
+    #canvas:-webkit-full-screen {
+      width: 100%;
+      height: 100%;
+    }
+    #canvas:-ms-fullscreen {
+      width: 100%;
+      height: 100%;
+    }
+    #canvas:fullscreen {
+      width: 100%;
+      height: 100%;
+    }
+
+    #overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      color: white;
+      overflow: auto;
+      width: 100%;
+      height: 100%;
+
+      /* add flex */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    #sendMessage {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+    }
+
+    #chatHistory {
+      opacity: 0.8;
+      position: absolute;
+      width: 100%;
+      height: calc(100% - 50px);
+      top: 0;
+      overflow-y: auto; 
+    }
+
+    #usersOnline {
+      opacity: 0.8;
+      position: absolute;
+      width: 100%;
+      top: 30px;
+      overflow-y: auto; 
+    }
+
+    #infoBar {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 1000; /* Ensure it stays on top of other elements */
+    }
+
+    #userLogin form {
+      background: rgba(0, 0, 0, 0.6); /* 0.3 opacity means 70% transparent */
+    }
+
+    .input-override {
+      color: #fff;
+      font-weight: bold;
+      background-color: transparent;
+    }
+    
+    .button-override {
+      width: 100%;
+      text-align: center;
+    }
+
+    .rainbow {
+      background: linear-gradient(30deg, #6666ff 20%, #66ffff 30%, #66ff66 40%, #ffff66 50%, #ff6666 60%, #ff00ff 70%, #6666ff 80%) !important;
+      background-size: 200% 200% !important;
+	    animation: gradient 5s ease infinite !important;
+      -webkit-background-clip: text !important;
+      color: transparent !important;
+    }
+
+    @keyframes gradient {
+      0% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
+    .rainbow-bg {
+      background: linear-gradient(30deg, #6666ff 20%, #66ffff 30%, #66ff66 40%, #ffff66 50%, #ff6666 60%, #ff00ff 70%, #6666ff 80%) !important;
+    }
+
+
+  </style>
+  <body class="bg-black text-white">
+    <div id="mainWrapper">
+      <canvas id="canvas" width="800" height="600" style="width: 100%; height: 100%;"></canvas>
+      <div id="overlay">
+        <div id="app" class="container mx-auto">
+          <div id="infoBar">
+            <h2 class="text-4xl"><a href="{{track.data.attributes}}" target="_blank">{{track.data.attributes.display_name}}</a></h2>
+            <!--
+            <span>Time left: {{track.data.attributes}}</span>
+            -->
+          </div>
+
+          <!-- login -->
+          <div id="userLogin" class="w-full max-w-xs mx-auto" v-show="!userLoggedIn">
+            <form class="bg-black shadow-md rounded px-8 pt-6 pb-6" @submit.prevent="login(userName)">
+              <input
+                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-400 leading-tight focus:outline-none focus:shadow-outline input-override"
+                v-model="userName"
+                id="username"
+                type="text"
+                placeholder="your dream nickname"
+                autofocus
+                required
+              />
+              <div class="flex items-center justify-between">
+                <button
+                  class="bg-blue-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline rainbow button-override"
+                  @click="login(userName)"
+                  type="submit"
+                >
+                  Sign In
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- chat elements -->
+            <div class="" v-show="userLoggedIn">
+
+              <!-- users online -->
+              <div id="usersOnline">
+                <div class="mx-auto mt-10 mb-10">
+                  <h3>x users online</h3>
+                  <ul>
+                    <li
+                      v-for="user in userList"
+                      class="bg-gray-400 text-white p-2 rounded-2xl text-sm inline-block"
+                    >
+                      {{user}}
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+            <!-- chat hist -->
+            <div id="chatHistory" ref="chatHistory">
+              <ul class="mx-auto space-y-5 grid grid-cols-1">
+                <li v-for="data in messagesHist" class="text-white">
+                  <span class="bg-gray-600 p-2 rounded-2xl text-sm"
+                    >{{data.userName}}</span
+                  >
+                  <span class="bg-gray-900 p-2 rounded-2xl text-sm"
+                    >{{data.message}}</span
+                  >
+                </li>
+              </ul>
+            </div>
+
+            <!-- form -->
+            <div id="sendMessage" class="mx-auto mt-10">
+              <form v-on:submit.prevent="sendMessage(message)" class="flex" style="flex-direction: row;">
+                <input
+                  class="shadow appearance-none border rounded w-full py-2 px-3 text-white leading-tight focus:outline-none focus:shadow-outline flex-grow input-override"
+                  type="text"
+                  v-model="message"
+                  name="message"
+                  placeholder="type your message..."
+                  required
+                />
+                <button
+                  class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline rainbow"
+                  type="submit"
+                  @click="sendMessage(message)"
+                  style="width: 100px;"
+                >
+                  Send
+                </button>
+              </form>
+            </div>
+
+
+          </div>
         </div>
-      </form>
-    </div>
-
-    <!-- chat elements -->
-    <div class="" v-show="userLoggedIn">
-
-      <!-- users online -->
-      <div class="mx-auto mt-10 mb-10">
-        <h3>x users online</h3>
-        <ul>
-          <li v-for="user in userList" class="bg-blue-400 text-white p-2 rounded-2xl inline-block">{{user}}</li>
-        </ul>
       </div>
-
-      <!-- chat hist -->
-      <ul class="mx-auto space-y-5 grid grid-cols-1">
-
-        <li v-for="data in messagesHist" class="text-white">
-          <span class="bg-blue-400 p-2 rounded-2xl">{{data.userName}}</span>
-          <span class="bg-gray-800 p-2 rounded-2xl">{{data.message}}</span>
-        </li>
-
-      </ul>
-
-      <!-- form -->
-      <div class="mx-auto mt-10">
-        <form v-on:submit.prevent="sendMessage(message)">
-          <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" type="text" v-model="message" name="message" placeholder="Type your message..." />
-          <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit" @click="sendMessage(message)">Send</button>
-        </form>
-      </div>
-
     </div>
-
-  </div>
-
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="/jquery/dist/jquery.min.js"></script>
-  <script src="/bootstrap/dist/js/bootstrap.min.js"></script>
-  <script src="/vue/dist/vue.js"></script>
-  <script src="./app.js"></script>
-</body>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/jquery/dist/jquery.min.js"></script>
+    <script src="/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="/vue/dist/vue.js"></script>
+    <script src="./app.js"></script>
+  </body>
 </html>

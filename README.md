@@ -1,3 +1,14 @@
+# TODO
+
+[ ] fix signup window
+[ ] nice formatting of chat
+
+[ ] continue track at specified position
+[ ] fix the bug with empty chat
+[ ] 
+
+
+
 # Socket.io Chat Room
 
 This project implemented a real-time chat application with socket.io.

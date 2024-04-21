@@ -53,34 +53,27 @@ function between(min, max) {
 
 async function playNext() {
   var track = null;
-  if (queue.length > 0) {
-    // get random track
-    // pop first item from the queue
-    console.log("Pull track from the queue");
-    track = queue.shift(); // queue[0];
-  } else {
-    console.log("Get random next track");
-    /*
-    try {
+  try {
+    if (queue.length > 0) {
+      console.log("Pull track from the queue");
+      track = queue.shift();
+    } else {
+      console.log("Get random next track");
       track = await getTrack(between(0, 3000));
-    } catch (error) {
-      console.log(error);
-      playNext();
-      return;
     }
-    */
-
-    track = await getTrack(between(0, 3000));
-    // console.log(track);
+  } catch (error) {
+    console.error(error);
+    setTimeout(playNext, 5000); // Try again after 5 seconds
+    return;
   }
 
   if (!track) {
     console.log("Couldn't get the track. Trying again");
-    playNext();
+    setTimeout(playNext, 5000); // Try again after 5 seconds
     return;
   }
 
-  currentState.started = Date.now;
+  currentState.started = Date.now();
   currentState.track = track;
   currentState.length = track.data.attributes.metadata.length;
 
@@ -206,13 +199,13 @@ async function getTrack(trackId) {
     return r;
   } catch (error) {
     console.log(error.response.body);
-    return false;
+    throw new Error('Failed to get track');
   }
 }
 
 function botMessage(message) {
   return {
-    time: Date.now,
+    time: Date.now(),
     userName: 'FormaBot',
     message: message
   }
