@@ -44,6 +44,12 @@
       height: 100%;
     }
 
+    #mainWrapper {
+      width: 100%;
+      height: 100%;
+      padding: 0 10px;
+    }
+
     #overlay {
       position: absolute;
       top: 0;
@@ -66,11 +72,28 @@
       width: 100%;
     }
 
-    #chatHistory {
-      opacity: 0.8;
+    #chatHistory::before {
+      content: "";
       position: absolute;
+      top: 0;
+      left: -20px;
+      width: 120%;
+      height: 100px; /* Adjust this value to control the height of the fade-out effect */
+      background: linear-gradient(to bottom, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
+      pointer-events: none; /* This allows the user to still interact with the elements underneath the overlay */
+    }
+
+    #chatHistory {
+      position: absolute;
+      opacity: 0.8;
       width: 100%;
+
+      /*
+      position: absolute;
       height: calc(100% - 50px);
+      min-height: calc(100% - 50px);
+      */
+      height: calc(100% - 50px); /* Subtract the height of the fade-out effect */
       min-height: calc(100% - 50px);
       top: 0;
       overflow-y: auto;
@@ -90,6 +113,8 @@
       width: 100%;
       top: 30px;
       overflow-y: auto;
+
+      text-align: right;
     }
 
     #infoBar {
@@ -97,6 +122,8 @@
       top: 0;
       width: 100%;
       z-index: 1000; /* Ensure it stays on top of other elements */
+
+      text-align: right;
     }
 
     #userLogin form {
@@ -179,45 +206,49 @@
     }
   </style>
   <body class="bg-black text-white">
-    <div id="mainWrapper">
+    <div id="app">
       <canvas
         id="canvas"
         width="800"
         height="600"
         style="width: 100%; height: 100%"
       ></canvas>
-      <div id="overlay">
-        <div id="app" class="container mx-auto">
-          <div id="infoBar">
-            <div id="trackInfo">
-              <h2 class="text-4xl mt-4">
-                <a :href="track.data.attributes" target="_blank"
-                  >{{track.data.attributes.display_name}}</a
-                >
-              </h2>
-            </div>
 
-            <!--
-            <span>Time left: {{track.data.attributes}}</span>
-            -->
+      <div id="infoBar">
+        <div id="trackInfo" v-if="track && track.data">
+          <h2 class="text-4xl mt-4">
+            <a :href="track.data.attributes" target="_blank"
+              >{{track.data.attributes.display_name}}</a
+            >
+          </h2>
+        </div>
 
-            <!-- users online -->
-            <div id="usersOnline" v-show="userLoggedIn">
-              <div class="mx-auto mt-10 mb-10">
-                <h3 class="text-xs">{{userCount}} users online</h3>
-                <ul class="space-x-1 space-y-1">
-                  <li
-                    v-for="user in userList"
-                    class="bg-gray-400 text-white p-1 px-2 rounded-2xl text-xs inline-block"
-                  >
-                    {{user}}
-                  </li>
-                </ul>
-              </div>
-            </div>
+        <!--
+        <span>Time left: {{track.data.attributes}}</span>
+        -->
+
+        <!-- users online -->
+        <div id="usersOnline" v-show="userLoggedIn">
+          <div class="mx-auto mt-10 mb-10">
+            <h3 class="text-xs">{{userCount}} users online</h3>
+            <ul class="space-x-1 space-y-1">
+              <li
+                v-for="user in userList"
+                class="bg-gray-400 text-white p-1 px-2 rounded-2xl text-xs inline-block"
+              >
+                {{user}}
+              </li>
+            </ul>
           </div>
+        </div>
+        
+      </div>
+
+      <div id="overlay">
+        <div id="mainWrapper">
 
           <!-- login -->
+          
           <div
             id="userLogin"
             class="w-full max-w-xs mx-auto"
@@ -288,7 +319,6 @@
                   v-model="message"
                   name="message"
                   placeholder="type your message..."
-                  required
                 />
                 <button
                   class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline rainbow"

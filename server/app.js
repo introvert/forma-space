@@ -141,6 +141,14 @@ function parseCmd(socket, data) {
       // play a args[1] track
       socket.emit('message', botMessage(`Finding track ${args[0]} ...`));
       cmdPlay(socket, args);
+      break;
+    
+    case 'n':
+    case 'next':
+        // play a args[1] track
+        socket.emit('message', botMessage(`Play next track`));
+        playNext();
+        break;
 
     default:
       console.log(`Sorry, we are out of ${cmd}. Did you mean some techno?!`);
@@ -204,7 +212,8 @@ async function getTrack(trackId) {
     return r;
   } catch (error) {
     console.log(error.response.body);
-    throw new Error('Failed to get track');
+    // throw new Error('Failed to get track');
+    return false;
   }
 }
 

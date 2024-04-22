@@ -195,6 +195,26 @@
         this.sourceNode = this.audioContext.createMediaStreamSource(stream);
         this.visualizer.connectAudio(this.sourceNode);
       },
+      playCurrentTrack: function() {
+        if (this.track) {
+
+          var elapsedSeconds = 0;
+          if (this.trackStarted) {
+            var now = Date.now();
+            console.log("dataStarted", this.trackStarted)
+            var elapsed = now - this.trackStarted; // Time elapsed in milliseconds
+            var elapsedSeconds = elapsed / 1000; // Convert to seconds
+          }
+
+          console.log("elapsedSeconds", elapsedSeconds);
+
+          this.playMp3(
+            "http://localhost:3000/fwd?url=" +
+              this.track.data.attributes.low_quality_url,
+            elapsedSeconds
+          );
+        }
+      },
       initSocket: function () {
         socket.on(
           "message",
@@ -214,21 +234,15 @@
 
               if (this.track == null) {
                 this.track = data.track;
-
-                var now = Date.now();
-                console.log("data", data);
-                console.log("dataStarted", data.started)
-                var elapsed = now - data.started; // Time elapsed in milliseconds
-                var elapsedSeconds = elapsed / 1000; // Convert to seconds
-
-                console.log("elapsedSeconds", elapsedSeconds);
+                this.trackStarted = data.started;
 
                 // this.playMp3("http://localhost:3000/song.mp3");
-                this.playMp3(
-                  "http://localhost:3000/fwd?url=" +
-                    data.track.data.attributes.low_quality_url,
-                    elapsedSeconds
-                );
+                // this.playMp3(
+                //   "http://localhost:3000/fwd?url=" +
+                //     data.track.data.attributes.low_quality_url,
+                //     elapsedSeconds
+                // );
+                this.playCurrentTrack();
               } else {
                 this.queue.push(data.track);
               }
