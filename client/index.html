@@ -1,84 +1,314 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Socket.io chat room</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="/bootstrap/dist/css/bootstrap.min.css">
-</head>
-<body style="margin-top: 10px;">
-    <div id="app" class="container">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Formaviva Space</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-        <div class="row" v-if="track">
-            <h2>Playing: {{track.data.attributes.display_name}}</h2>
-        </div>
+    <link href="https://cdn.tailwindcss.com" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
 
-        <!--Only show before user logged in-->
-        <div class="row" v-show="!userLoggedIn">
-            <div class="col-md-6 col-md-offset-3">
-                <form action="" name="loginForm" v-on:submit.prevent="">
-                    <div class="row">
-                        <div class="input-group">
-                            <input class="form-control" type="text" autocomplete="off" v-model="userName" placeholder="Please give yourself a nickname" />
-                            <div class="input-group-btn">
-                                <button class="btn btn-primary" type="button" @click="login(userName)">Login</button>
-                            </div>
-                        </div>
-                    </div>
-                </form>
+    <script type="text/javascript" src="https://unpkg.com/lodash"></script>
+    <script type="text/javascript" src="https://unpkg.com/butterchurn"></script>
+    <script
+      type="text/javascript"
+      src="https://unpkg.com/butterchurn-presets"
+    ></script>
+    <script
+      type="text/javascript"
+      src="https://unpkg.com/butterchurn-presets/lib/butterchurnPresetsExtra.min.js"
+    ></script>
+  </head>
+  <style>
+    #canvas {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    #canvas:-moz-full-screen {
+      width: 100%;
+      height: 100%;
+    }
+    #canvas:-webkit-full-screen {
+      width: 100%;
+      height: 100%;
+    }
+    #canvas:-ms-fullscreen {
+      width: 100%;
+      height: 100%;
+    }
+    #canvas:fullscreen {
+      width: 100%;
+      height: 100%;
+    }
+
+    #overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      color: white;
+      overflow: auto;
+      width: 100%;
+      height: 100%;
+
+      /* add flex */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    #sendMessage {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+    }
+
+    #chatHistory {
+      opacity: 0.8;
+      position: absolute;
+      width: 100%;
+      height: calc(100% - 50px);
+      min-height: calc(100% - 50px);
+      top: 0;
+      overflow-y: auto;
+
+      display: flex;
+      flex-direction: column-reverse;
+      justify-content: flex-end;
+    }
+
+    #chatHistory ul {
+      width: 100%;
+    }
+
+    #usersOnline {
+      opacity: 0.8;
+      position: absolute;
+      width: 100%;
+      top: 30px;
+      overflow-y: auto;
+    }
+
+    #infoBar {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 1000; /* Ensure it stays on top of other elements */
+    }
+
+    #userLogin form {
+      background: rgba(0, 0, 0, 0.2); /* 0.3 opacity means 70% transparent */
+    }
+
+    .input-override {
+      color: #fff;
+      font-weight: bold;
+      background-color: transparent;
+    }
+
+    .button-override {
+      width: 100%;
+      text-align: center;
+    }
+
+    .rainbow {
+      background: linear-gradient(
+        30deg,
+        #6666ff 20%,
+        #66ffff 30%,
+        #66ff66 40%,
+        #ffff66 50%,
+        #ff6666 60%,
+        #ff00ff 70%,
+        #6666ff 80%
+      ) !important;
+      background-size: 200% 200% !important;
+      animation: gradient 5s ease infinite !important;
+      -webkit-background-clip: text !important;
+      color: transparent !important;
+    }
+
+    @keyframes gradient {
+      0% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
+    .rainbow-bg {
+      background: linear-gradient(
+        30deg,
+        #6666ff 20%,
+        #66ffff 30%,
+        #66ff66 40%,
+        #ffff66 50%,
+        #ff6666 60%,
+        #ff00ff 70%,
+        #6666ff 80%
+      ) !important;
+    }
+
+    /* login animation */
+    #userLogin p {
+      opacity: 0;
+      animation: fadeIn 2s forwards;
+    }
+
+    #userLogin p:nth-child(1) {
+      animation-delay: 0s;
+    }
+
+    #userLogin p:nth-child(2) {
+      animation-delay: 1s;
+    }
+
+    /* Add more selectors if there are more paragraphs */
+
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+      }
+    }
+  </style>
+  <body class="bg-black text-white">
+    <div id="mainWrapper">
+      <canvas
+        id="canvas"
+        width="800"
+        height="600"
+        style="width: 100%; height: 100%"
+      ></canvas>
+      <div id="overlay">
+        <div id="app" class="container mx-auto">
+          <div id="infoBar">
+            <div id="trackInfo">
+              <h2 class="text-4xl mt-4">
+                <a :href="track.data.attributes" target="_blank"
+                  >{{track.data.attributes.display_name}}</a
+                >
+              </h2>
             </div>
-        </div>
 
-        <div class="row well" style="min-height: 500px;" v-show="userLoggedIn">
+            <!--
+            <span>Time left: {{track.data.attributes}}</span>
+            -->
 
-            <!--online user list-->
-            <div class="col-md-3">
-                <div class="panel panel-primary">
-                    <div class="panel-heading" id="userListHeading">
-                        <span class="glyphicon glyphicon-user"></span> Online Users
-                        <div class="btn-group pull-right">
-                            <a type="button" class="btn btn-default btn-xs" data-toggle="collapse"  href="#userListBody">
-                                <span class="glyphicon glyphicon-chevron-down"></span>
-                            </a>
-                        </div>
-                    </div>
-                    <div class="panel-body collapse in" id="userListBody" style="height:355px; overflow-y: auto;">
-                        <ul class="list-group">
-                            <li style="text-align: center;" class="list-group-item" v-for="user in userList">{{user}}</li>
-                        </ul>
-                    </div>
-                </div>
+            <!-- users online -->
+            <div id="usersOnline" v-show="userLoggedIn">
+              <div class="mx-auto mt-10 mb-10">
+                <h3 class="text-xs">{{userCount}} users online</h3>
+                <ul class="space-x-1 space-y-1">
+                  <li
+                    v-for="user in userList"
+                    class="bg-gray-400 text-white p-1 px-2 rounded-2xl text-xs inline-block"
+                  >
+                    {{user}}
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- login -->
+          <div
+            id="userLogin"
+            class="w-full max-w-xs mx-auto"
+            v-show="!userLoggedIn"
+          >
+            <p class="text-center mb-3">
+              You are about to enter a dream world of PLUR World United LSD
+              experience.
+            </p>
+
+            <p class="text-center">One world, one quality vibration.</p>
+
+            <form
+              class="bg-black shadow-md rounded mt-6 mb-6 px-8 pt-6 pb-6"
+              @submit.prevent="login(userName)"
+            >
+              <input
+                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-400 leading-tight focus:outline-none focus:shadow-outline input-override"
+                v-model="userName"
+                id="username"
+                type="text"
+                placeholder="your dream nickname"
+                autofocus
+                required
+              />
+              <div class="flex items-center justify-between">
+                <button
+                  class="bg-blue-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline rainbow button-override"
+                  @click="login(userName)"
+                  type="submit"
+                >
+                  Sign In
+                </button>
+              </div>
+            </form>
+
+            <p class="text-center text-xs text-gray-400">
+              LSD Player unifies everyone's experience into one.
+            </p>
+          </div>
+
+          <!-- chat elements -->
+          <div class="" v-show="userLoggedIn">
+            <!-- chat hist -->
+            <div id="chatHistory" ref="chatHistory">
+              <ul class="mx-auto space-y-2 grid grid-cols-1">
+                <li v-for="data in messagesHist" class="text-white">
+                  <span class="bg-gray-600 p-1 px-2 rounded-2xl text-xs"
+                    >{{data.userName}}</span
+                  >
+                  <span class="bg-gray-900 p-1 px-2 rounded-2xl text-xs"
+                    >{{data.message}}</span
+                  >
+                </li>
+              </ul>
             </div>
 
-            <!--chat history-->
-            <div class="col-md-9">
-
-                <div class="panel panel-primary">
-                    <div class="panel-heading"><span class="glyphicon glyphicon-comment"></span> Messages</div>
-                    <div class="panel-body" style="height:300px; overflow-y: auto;">
-                        <ul id="messages" class="list-group">
-                            <!--chat message history-->
-                            <li v-for="data in messagesHist" class="list-group-item">{{data.time}}<span style="font-weight: bold;">{{data.userName}}</span> : {{data.message}}</li>
-                        </ul>
-                    </div>
-                </div>
-                <form action="" name="messageForm" v-on:submit.prevent="sendMessage(message)">
-                    <div class="input-group">
-                        <input class="form-control" type="text" autocomplete="off" v-model="message" placeholder="Type your message here" />
-                        <div class="input-group-btn">
-                            <button class="btn btn-primary" type="button" @click="sendMessage(message)">Send</button>
-                        </div>
-                    </div>
-                </form>
+            <!-- form -->
+            <div id="sendMessage" class="mx-auto mt-10">
+              <form
+                v-on:submit.prevent="sendMessage(message)"
+                class="flex"
+                style="flex-direction: row"
+              >
+                <input
+                  class="shadow appearance-none border rounded w-full py-2 px-3 text-white leading-tight focus:outline-none focus:shadow-outline flex-grow input-override"
+                  type="text"
+                  v-model="message"
+                  name="message"
+                  placeholder="type your message..."
+                  required
+                />
+                <button
+                  class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline rainbow"
+                  type="submit"
+                  @click="sendMessage(message)"
+                  style="width: 100px"
+                >
+                  Send
+                </button>
+              </form>
             </div>
-
+          </div>
         </div>
-
+      </div>
     </div>
+
     <script src="/socket.io/socket.io.js"></script>
     <script src="/jquery/dist/jquery.min.js"></script>
     <script src="/bootstrap/dist/js/bootstrap.min.js"></script>
     <script src="/vue/dist/vue.js"></script>
     <script src="./app.js"></script>
-</body>
+  </body>
 </html>

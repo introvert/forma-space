@@ -77,8 +77,13 @@ async function playNext() {
   currentState.track = track;
   currentState.length = track.data.attributes.metadata.length;
 
+  var data = {
+    action: "play",
+    track: track,
+    started: currentState.started
+  }
   // emit event to clients to play the track
-  socketio.emit("event", { action: "play", track: track });
+  socketio.emit("event", data );
 
   // inform everyone which track is playing
   socketio.emit("message", botMessage(`Currently playing ${currentState.track.data.attributes.display_name} `));
@@ -220,14 +225,13 @@ function sendLog(socket) {
 function initConnection(socket) {
   console.log("currentState", currentState);
   if (currentState.track) {
-    socket.emit("event", { action: "play", track: currentState.track });
+    socket.emit("event", { action: "play", track: currentState.track, started: currentState.started });
     socket.emit("message", botMessage(`Currently playing ${currentState.track.data.attributes.display_name} `));
   }
 }
 
 socketio.on('connection', function (socket) {
   console.log("A user connected. Socket id: " + socket.id);
-
 
   initConnection(socket);
 
@@ -250,6 +254,7 @@ socketio.on('connection', function (socket) {
     }
     storeEmit(socketio, "event", data);
     storeEmit(socketio, "message", botMessage(`A comrade ${userName} joined the chat...`));
+    socketio.sockets.emit('userCount', { count: users.length });
 
     // cool
     console.log("Sending socket log to the user");
@@ -284,6 +289,8 @@ socketio.on('connection', function (socket) {
     if (removedUserIndex >= 0) {
       users.splice(removedUserIndex, 1);
 
+      socketio.sockets.emit('userCount', { count: users.length });
+
       storeEmit(socketio, "event", {
         action: "left",
         userName: socket.userName,
@@ -302,3 +309,13 @@ http.listen(port, function () {
   console.log("Running on port: " + port);
   playNext();
 });
+
+function emitChangeVisuals(intervalInSeconds) {
+  setInterval(() => {
+    const randomNumber = Math.random(); // Generate a random number between 0 and 100
+    socketio.emit('changeVisuals', randomNumber);
+  }, intervalInSeconds * 1000);
+}
+
+// Call the function with the desired interval in seconds
+emitChangeVisuals(15);

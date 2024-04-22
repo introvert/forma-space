@@ -18,9 +18,15 @@
       userLoggedIn: false,
       message: "",
       messagesHist: [],
+      userCount: 0, 
     },
     methods: {
       login: function (userName) {
+        if (!userName.trim()) {  // Check if the username is empty or only contains whitespace
+          // alert('Finally you have an opportunity to choose a great nickname by yourself and not someone else. Why not do it?');
+          return;
+        }
+
         socket.emit("join", userName);
         this.userName = userName;
         console.log("username", this.userName);
@@ -40,7 +46,7 @@
           container.scrollTop = container.scrollHeight;
         });
       },
-      playMp3: function (url) {
+      playMp3: function (url, startTime = 0) {
         console.log("playMp3 called");
         if (!this.audioContext) {
           console.log("playMp3 initAudioContext was not initialized");
@@ -52,8 +58,16 @@
 
         var request = new XMLHttpRequest();
         var audioBuffer;
+
+        var bitrate = 128 * 1000 / 8; // 16000 bytes per second
+        // Calculate the byte range to request based on the start time and the file's bitrate
+        var rangeStart = Math.floor(startTime * bitrate); // replace 'bitrate' with the actual bitrate
+
         request.open("GET", url, true);
         request.responseType = "arraybuffer";
+
+        request.setRequestHeader("Range", "bytes=" + rangeStart + "-");
+
         request.onload = function () {
           this.audioContext.decodeAudioData(
             request.response,
@@ -61,7 +75,8 @@
               var bufferSource = this.audioContext.createBufferSource();
               bufferSource.buffer = buffer;
               bufferSource.connect(this.audioContext.destination);
-              bufferSource.start();
+              // bufferSource.start(startTime);
+              bufferSource.start(0);
 
               // Connect the audio stream to the visualizer
               // this.connectAudioStream(bufferSource);
@@ -199,10 +214,20 @@
 
               if (this.track == null) {
                 this.track = data.track;
+
+                var now = Date.now();
+                console.log("data", data);
+                console.log("dataStarted", data.started)
+                var elapsed = now - data.started; // Time elapsed in milliseconds
+                var elapsedSeconds = elapsed / 1000; // Convert to seconds
+
+                console.log("elapsedSeconds", elapsedSeconds);
+
                 // this.playMp3("http://localhost:3000/song.mp3");
                 this.playMp3(
                   "http://localhost:3000/fwd?url=" +
-                    data.track.data.attributes.low_quality_url
+                    data.track.data.attributes.low_quality_url,
+                    elapsedSeconds
                 );
               } else {
                 this.queue.push(data.track);
@@ -241,6 +266,17 @@
             console.log("disconnect", err);
           }.bind(this)
         );
+
+        socket.on('userCount', function (data) {
+          console.log('Number of users: ' + data.count);
+          // Update UI here
+          this.userCount = data.count;
+        }.bind(this));
+
+        socket.on('changeVisuals', function (randomValue) {
+          console.log("change visuals request", randomValue);
+          this.nextPreset(randomValue);
+        }.bind(this));
       },
     },
     computed: {
