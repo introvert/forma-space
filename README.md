@@ -1,62 +1,31 @@
 # TODO
 
-[ ] fix signup window
-[ ] nice formatting of chat
+[x] fix signup window
+[x] nice formatting of chat
 
-[ ] continue track at specified position
-[ ] fix the bug with empty chat
+[x] continue track at specified position - test
+[x] fix the bug with empty chat
 [ ] 
 
+[ ] move queue to sqlite db
+[ ] add tests
+[ ] open graph tags
+[ ] limit history chat to last 300 messages
+[ ] fix bugs !!
 
+# Formaviva LSD player
 
-# Socket.io Chat Room
+LSD player is a live music visualizer that streams music from Formaviva.com.
 
-This project implemented a real-time chat application with socket.io.
+The project is intended to provide a music-visual experience with quality independent music.
 
-![Screenshot](https://user-images.githubusercontent.com/3967446/32359950-e2d3a24e-c027-11e7-87ef-643d9e63b686.png)
-
-## Tech Stack
-
-Server:
-
-* [Nodejs](https://nodejs.org/) + [Express](http://expressjs.com/)
-* [Socket.io](http://socket.io/)
-
-Client:
-
-* [Vue.js](https://vuejs.org/)
-* [Bootstrap](http://getbootstrap.com/)
-* [Socket.io](http://socket.io/)
-
-## Running the application locally
-
+To run the project:
 ```
-git clone https://github.com/OneSlashNinja/ChatRoom.git
-cd ChatRoom
 npm install
-cd Server
-node app.js
+node server/app.js
 ```
 
-Then you can access the chat room here: <http://localhost:3000>
-
-## Features
-
-### Version 1.0
-
-* Most basic chat room. multi user may connect to the server( use **ifconfig** or **ipconfig** to find out the server ip address ) and chat and see the real-time message
-
-### Version 2.0
-
-* Add simple login functionalities. User may input their nickname before entering the chat room. And user may see who is currently online at left hand side user list.
-
-* Message now has the prefix to indicate by who it is sent
-
-### Version 3.0 (TODO)
-
-* Add the user-to-user chat functionalities
-
-* Use [Redis](https://redis.io/) or [MongoDB](https://www.mongodb.com/) as database to store the history messages so that new loged in user may see what is going on
+After that, you can visit http://localhost:3000 in your browser
 
 ## At the end
 
