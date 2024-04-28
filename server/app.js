@@ -37,12 +37,15 @@ function storeHistory(type, item) {
 
 function recoverState(callback) {
   db.get("SELECT * FROM state ORDER BY rowid DESC LIMIT 1", [], (err, row) => {
+    console.log("recoverState row", row);
     if (row) {
       callback({
         started: row.started,
         length: row.length,
         track: JSON.parse(row.track)
       });
+    } else {
+      callback(null);  // Call the callback with null when there's no state to recover
     }
   });
 }
@@ -163,7 +166,7 @@ async function playNext() {
 
 function storeLog(type, item) {
   logs.push([type, item]);
-  console.log("logs", logs);
+  // console.log("logs", logs);
 
   storeHistory(type, item);
 }
@@ -296,7 +299,7 @@ function sendLog(socket) {
 }
 
 function initConnection(socket) {
-  console.log("currentState", currentState);
+  console.log("[initConnection] currentState", currentState);
   if (currentState.track) {
     socket.emit("event", { action: "play", track: currentState.track, started: currentState.started });
     socket.emit("message", botMessage(`Currently playing ${currentState.track.data.attributes.display_name} `));
@@ -381,20 +384,38 @@ socketio.on('connection', function (socket) {
 initializeDatabase();
 
 
-function initializePlayer() {
-  recoverState(function(state) {
-    currentState = state;
+async function initializePlayer() {
+  console.log("pizdo");
+  await new Promise((resolve, reject) => {
+    recoverState(function(state) {
+      if (state) {
+        currentState = state;
+      }
+      resolve();
+    });
+  });
+
+  console.log("mater");
+  await new Promise((resolve, reject) => {
+    recoverChats(function(chat) {
+      socketio.emit('message', chat);
+      resolve();
+    });
+  });
+
+  console.log("jebemo");
+  await new Promise((resolve, reject) => {
+    recoverHistory(function(type, item) {
+      socketio.emit(type, item);
+      resolve();
+    });
+  });
+
+  console.log("playNext in initializePlayer");
+  // If currentState is still empty, call playNext
+  if (!currentState.started || !currentState.length || !currentState.track) {
     playNext();
-  });
-
-  recoverChats(function(chat) {
-    socketio.emit('message', chat);
-  });
-
-  recoverHistory(function(type, item) {
-    socketio.emit(type, item);
-  });
-
+  }
 }
 
 http.listen(port, function () {
