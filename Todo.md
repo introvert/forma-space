@@ -3,3 +3,6 @@
 3. Visuals (on / off)
 4. Volume set
 5. Layout
+
+# Favorite presets
+118

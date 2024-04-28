@@ -46,15 +46,15 @@
           container.scrollTop = container.scrollHeight;
         });
       },
-      playMp3: function (url, startTime = 0) {
-        console.log("playMp3 called");
+      playAudio: function (url, startTime = 0) {
+        console.log("playAudio called");
         if (!this.audioContext) {
-          console.log("playMp3 initAudioContext was not initialized");
+          console.log("playAudio initAudioContext was not initialized");
           this.initAudioContext();
           // return;
         }
 
-        console.log("playMp3 now")
+        console.log("playAudio now")
 
         var request = new XMLHttpRequest();
         var audioBuffer;
@@ -96,7 +96,7 @@
         if (this.queue.length > 0) {
           var track = this.queue.shift();
           this.track = track;
-          this.playMp3(
+          this.playAudio(
             "http://localhost:3000/fwd?url=" +
               track.data.attributes.low_quality_url
           );
@@ -208,7 +208,7 @@
 
           console.log("elapsedSeconds", elapsedSeconds);
 
-          this.playMp3(
+          this.playAudio(
             "http://localhost:3000/fwd?url=" +
               this.track.data.attributes.low_quality_url,
             elapsedSeconds
@@ -236,8 +236,8 @@
                 this.track = data.track;
                 this.trackStarted = data.started;
 
-                // this.playMp3("http://localhost:3000/song.mp3");
-                // this.playMp3(
+                // this.playAudio("http://localhost:3000/song.mp3");
+                // this.playAudio(
                 //   "http://localhost:3000/fwd?url=" +
                 //     data.track.data.attributes.low_quality_url,
                 //     elapsedSeconds

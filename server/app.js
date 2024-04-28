@@ -1,6 +1,7 @@
 "use strict"
 
 var express = require('express');
+var sqlite3 = require('sqlite3').verbose();
 
 var app = express();
 
@@ -11,6 +12,61 @@ var http = require('http').Server(app);
 var socketio = require('socket.io')(http);
 
 var port = process.env.port || 3000;
+
+var db = new sqlite3.Database('./state.db');
+
+function initializeDatabase() {
+  db.serialize(function() {
+    db.run("CREATE TABLE IF NOT EXISTS state (started TEXT, length TEXT, track TEXT)");
+    db.run("CREATE TABLE IF NOT EXISTS chats (time TEXT, userName TEXT, message TEXT)");
+    db.run("CREATE TABLE IF NOT EXISTS history (type TEXT, item TEXT)");
+  });
+}
+
+function storeState(state) {
+  db.run("INSERT INTO state (started, length, track) VALUES (?, ?, ?)", [state.started, state.length, JSON.stringify(state.track)]);
+}
+
+function storeChat(chat) {
+  db.run("INSERT INTO chats (time, userName, message) VALUES (?, ?, ?)", [chat.time, chat.userName, chat.message]);
+}
+
+function storeHistory(type, item) {
+  db.run("INSERT INTO history (type, item) VALUES (?, ?)", [type, JSON.stringify(item)]);
+}
+
+function recoverState(callback) {
+  db.get("SELECT * FROM state ORDER BY rowid DESC LIMIT 1", [], (err, row) => {
+    if (row) {
+      callback({
+        started: row.started,
+        length: row.length,
+        track: JSON.parse(row.track)
+      });
+    }
+  });
+}
+
+function recoverChats(callback) {
+  db.each("SELECT * FROM chats", [], (err, row) => {
+    if (row) {
+      callback({
+        time: row.time,
+        userName: row.userName,
+        message: row.message
+      });
+    }
+  });
+}
+
+function recoverHistory(callback) {
+  db.each("SELECT * FROM history", [], (err, row) => {
+    if (row) {
+      callback(row.type, JSON.parse(row.item));
+    }
+  });
+}
+
 
 app.use(express.static(__dirname + "/../client"));
 app.use(express.static(__dirname + "/../node_modules"));
@@ -77,6 +133,8 @@ async function playNext() {
   currentState.track = track;
   currentState.length = track.data.attributes.metadata.length;
 
+  storeState(currentState);
+
   var data = {
     action: "play",
     track: track,
@@ -106,6 +164,8 @@ async function playNext() {
 function storeLog(type, item) {
   logs.push([type, item]);
   console.log("logs", logs);
+
+  storeHistory(type, item);
 }
 
 function storeEmit(socket, type, item) {
@@ -116,6 +176,10 @@ function storeEmit(socket, type, item) {
   
   storeLog(type, item);
   socket.emit(type, item);
+
+  if (type === 'message') {
+    storeChat(item);
+  }
 }
 
 function parseCmd(socket, data) {
@@ -314,9 +378,28 @@ socketio.on('connection', function (socket) {
   });
 });
 
+initializeDatabase();
+
+
+function initializePlayer() {
+  recoverState(function(state) {
+    currentState = state;
+    playNext();
+  });
+
+  recoverChats(function(chat) {
+    socketio.emit('message', chat);
+  });
+
+  recoverHistory(function(type, item) {
+    socketio.emit(type, item);
+  });
+
+}
+
 http.listen(port, function () {
   console.log("Running on port: " + port);
-  playNext();
+  initializePlayer();
 });
 
 function emitChangeVisuals(intervalInSeconds) {
@@ -327,4 +410,4 @@ function emitChangeVisuals(intervalInSeconds) {
 }
 
 // Call the function with the desired interval in seconds
-emitChangeVisuals(15);
+emitChangeVisuals(45);
