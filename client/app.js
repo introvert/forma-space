@@ -33,13 +33,14 @@
           socket.emit("join", userName);
           console.log("join", userName);
 
-          
+          // Waits to receive a response from the server, telling it there was an error with the wanted username
           socket.on('userNameError', function (data) {
             console.log('userNameError', data);
             alert(data);
             resolve();
           });
 
+          // Waits to receive a response from the server, telling it the username was accepted
           socket.on('userNameAccepted', function (data) {
             userName = data;
             console.log('userNameAccepted 2', data);

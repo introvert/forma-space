@@ -321,6 +321,9 @@ socketio.on('connection', function (socket) {
 
   // on join
   socket.on('join', function (userName) {
+
+    // Checks if the username is unique and returns an error if it is not
+    // This can be extended to other types of tests
     var isUserNameUnique = uniqueUsername(userName);
     if (!isUserNameUnique) {
       console.log('Username already taken');
