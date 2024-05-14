@@ -20,6 +20,7 @@ function initializeDatabase() {
     db.run("CREATE TABLE IF NOT EXISTS state (started TEXT, length TEXT, track TEXT)");
     db.run("CREATE TABLE IF NOT EXISTS chats (time TEXT, userName TEXT, message TEXT)");
     db.run("CREATE TABLE IF NOT EXISTS history (type TEXT, item TEXT)");
+    db.run("CREATE TABLE IF NOT EXISTS queue (queue TEXT, time TEXT)");
   });
 }
 
@@ -33,6 +34,10 @@ function storeChat(chat) {
 
 function storeHistory(type, item) {
   db.run("INSERT INTO history (type, item) VALUES (?, ?)", [type, JSON.stringify(item)]);
+}
+
+function storeQueue(queue) {
+  db.run("INSERT INTO queue (track, time) VALUES (?, ?)", [JSON.stringify(queue), Date.now()]);
 }
 
 function recoverState(callback) {
@@ -70,6 +75,16 @@ function recoverHistory(callback) {
   });
 }
 
+function recoverQueue(callback) {
+  // find the most recent queue
+  db.get("SELECT * FROM queue ORDER BY rowid DESC LIMIT 1", [], (err, row) => {
+    if (row) {
+      callback(JSON.parse(row.queue));
+    } else {
+      callback([]);
+    }
+  });
+}
 
 app.use(express.static(__dirname + "/../client"));
 app.use(express.static(__dirname + "/../node_modules"));
@@ -117,6 +132,7 @@ async function playNext() {
     if (queue.length > 0) {
       console.log("Pull track from the queue");
       track = queue.shift();
+      storeQueue(queue);
     } else {
       console.log("Get random next track");
       track = await getTrack(between(100, 3000));
@@ -262,6 +278,7 @@ async function cmdPlay(socket, args) {
   if (track) {
     console.log("found track", track);
     queue.push(track);
+    storeQueue(queue);
     socket.emit('message', botMessage(`Added <b>${track.data.attributes.display_name}</b> to the queue.`));
   } else {
     socket.emit('message', botMessage(`No such ${args[0]} track.`));
