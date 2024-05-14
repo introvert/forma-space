@@ -68,6 +68,13 @@
           container.scrollTop = container.scrollHeight;
         });
       },
+      stopAudio: function () {
+        console.log("Stopping audio");
+        if (this.audioContext) {
+          this.audioContext.close();
+          this.audioContext = null;
+        }
+      },
       playAudio: function (url, startTime = 0) {
         console.log("playAudio called");
         if (!this.audioContext) {
@@ -254,6 +261,8 @@
             if (data.action == "play") {
               console.log("play the track", data.track);
 
+
+              // WHAT THE FUCK IS THIS CODE
               if (this.track == null) {
                 this.track = data.track;
                 this.trackStarted = data.started;
@@ -266,7 +275,15 @@
                 // );
                 this.playCurrentTrack();
               } else {
-                this.queue.push(data.track);
+                this.stopAudio();
+                var now = Date.now();
+                var elapsed = now - data.started; 
+                var elapsedSeconds = elapsed / 1000; 
+                this.playAudio(
+                  "http://localhost:3000/fwd?url=" +
+                  data.track.data.attributes.low_quality_url, elapsedSeconds
+                  
+                );
               }
             }
           }.bind(this)

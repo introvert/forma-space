@@ -111,6 +111,7 @@ function between(min, max) {
 }
 
 async function playNext() {
+  console.log("playNext");
   var track = null;
   try {
     if (queue.length > 0) {
@@ -118,7 +119,7 @@ async function playNext() {
       track = queue.shift();
     } else {
       console.log("Get random next track");
-      track = await getTrack(between(0, 3000));
+      track = await getTrack(between(100, 3000));
     }
   } catch (error) {
     console.error(error);
@@ -132,11 +133,14 @@ async function playNext() {
     return;
   }
 
+  console.log("playNext track", track);
   currentState.started = Date.now();
   currentState.track = track;
   currentState.length = track.data.attributes.metadata.length;
 
   storeState(currentState);
+
+  console.log("playNext currentState", currentState);
 
   var data = {
     action: "play",
@@ -187,7 +191,8 @@ function storeEmit(socket, type, item) {
 
 function parseCmd(socket, data) {
   let args = data.message.split(" ")
-  if (args.length < 2) {
+  //! THERE WAS AN ERROR HERE, AS THE COMMAND n DOES NOT REQUIRE ANY ARGS 
+  if (args.length < 1) {
     console.log(`Command missing args: ${data.message}`);
     socket.emit('message', botMessage(`Command missing args: ${data.message}`));
     // send message back
@@ -217,6 +222,13 @@ function parseCmd(socket, data) {
         playNext();
         break;
 
+    case 'q':
+    case 'queue':
+      // show the queue
+      console.log("queue", queue);
+      socket.emit('message', botMessage(`Queue: ${queue.length} tracks`));
+      break;
+
     default:
       console.log(`Sorry, we are out of ${cmd}. Did you mean some techno?!`);
   }
@@ -243,6 +255,7 @@ async function cmdPlay(socket, args) {
 
   if (isNumeric(args[0])) {
     let trackId = parseInt(args[0]);
+    console.log("trackId", trackId);
     track = await getTrack(trackId);
   }
 
@@ -415,7 +428,7 @@ async function initializePlayer() {
     });
   });
 
-  console.log("mater");
+  console.log("mater"); //? Primerno???
   await new Promise((resolve, reject) => {
     recoverChats(function(chat) {
       socketio.emit('message', chat);
