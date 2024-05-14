@@ -22,15 +22,36 @@
     },
     methods: {
       login: function (userName) {
-        if (!userName.trim()) {  // Check if the username is empty or only contains whitespace
+        if (!userName.trim()) {  
+          // Check if the username is empty or only contains whitespace
           // alert('Finally you have an opportunity to choose a great nickname by yourself and not someone else. Why not do it?');
           return;
         }
 
-        socket.emit("join", userName);
-        this.userName = userName;
-        console.log("username", this.userName);
-        this.userLoggedIn = true;
+        // Await conformations from the server regarding the username
+        new Promise((resolve, reject) => {
+          socket.emit("join", userName);
+          console.log("join", userName);
+
+          
+          socket.on('userNameError', function (data) {
+            console.log('userNameError', data);
+            alert(data);
+            resolve();
+          });
+
+          socket.on('userNameAccepted', function (data) {
+            userName = data;
+            console.log('userNameAccepted 2', data);
+            console.log(this.userName);
+            
+            vue.userName = userName;
+            vue.userLoggedIn = true;
+
+            resolve();    
+            console.log(this.userName);
+          });
+        });
       },
       sendMessage: function (message) {
         if (message.trim() !== "") {

@@ -306,6 +306,14 @@ function initConnection(socket) {
   }
 }
 
+function uniqueUsername(userName) {
+  // the username should be unique
+  if (users.indexOf(userName) >= 0) {
+    return false;
+  }
+  return true;
+}
+
 socketio.on('connection', function (socket) {
   console.log("A user connected. Socket id: " + socket.id);
 
@@ -313,6 +321,15 @@ socketio.on('connection', function (socket) {
 
   // on join
   socket.on('join', function (userName) {
+    var isUserNameUnique = uniqueUsername(userName);
+    if (!isUserNameUnique) {
+      console.log('Username already taken');
+      socket.emit('userNameError', 'Username already taken');
+      return;
+    }
+    console.log('Username accepted');
+    socket.emit('userNameAccepted', userName);
+
     console.log('user change name to : ' + userName);
 
     socket.userName = userName;
