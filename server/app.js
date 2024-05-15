@@ -37,7 +37,7 @@ function storeHistory(type, item) {
 }
 
 function storeQueue(queue) {
-  db.run("INSERT INTO queue (track, time) VALUES (?, ?)", [JSON.stringify(queue), Date.now()]);
+  db.run("INSERT INTO queue (queue, time) VALUES (?, ?)", [JSON.stringify(queue), Date.now()]);
 }
 
 function recoverState(callback) {
@@ -77,7 +77,7 @@ function recoverHistory(callback) {
 
 function recoverQueue(callback) {
   // find the most recent queue
-  db.get("SELECT * FROM queue ORDER BY rowid DESC LIMIT 1", [], (err, row) => {
+  db.get("SELECT * FROM queue ORDER BY time DESC LIMIT 1", [], (err, row) => {
     if (row) {
       callback(JSON.parse(row.queue));
     } else {
@@ -242,9 +242,9 @@ function parseCmd(socket, data) {
     case 'queue':
       // show the queue
       console.log("queue", queue);
-      socket.emit('message', botMessage(`Queue: ${queue.length} tracks`));
+      cmdShowQueue(socket) 
       break;
-
+ 
     default:
       console.log(`Sorry, we are out of ${cmd}. Did you mean some techno?!`);
   }
@@ -260,6 +260,15 @@ function isNumeric(str) {
   if (typeof str != "string") return false // we only process strings!  
   return !isNaN(str) && // use type coercion to parse the _entirety_ of the string (`parseFloat` alone does not do this)...
          !isNaN(parseFloat(str)) // ...and ensure strings of whitespace fail
+}
+
+async function cmdShowQueue(socket) {
+  console.log("cmdShowQueue");
+  var queueTracks = '';
+  for (let i = 0; i < queue.length; i++) {
+    queueTracks += queue[i].data.attributes.display_name + '<br>';
+  }
+  socket.emit('message', botMessage(`Queue: ${queue.length} tracks<br>${queueTracks}`));
 }
 
 async function cmdPlay(socket, args) {
@@ -460,6 +469,19 @@ async function initializePlayer() {
       resolve();
     });
   });
+
+  console.log("jebemo");
+  await new Promise((resolve, reject) => {
+    recoverQueue(function(item) {
+      console.log("Recovered queue", item);
+      item.forEach((track) => {
+        queue.push(track);
+      });
+      console.log("Recovered queue", queue.length);
+      resolve();
+    });
+  });
+
 
   console.log("playNext in initializePlayer");
   // If currentState is still empty, call playNext
