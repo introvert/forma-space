@@ -24,6 +24,7 @@ function initializeDatabase() {
   });
 }
 
+// Functions that store the state, chat, history and queue in the database
 function storeState(state) {
   db.run("INSERT INTO state (started, length, track) VALUES (?, ?, ?)", [state.started, state.length, JSON.stringify(state.track)]);
 }
@@ -40,6 +41,7 @@ function storeQueue(queue) {
   db.run("INSERT INTO queue (queue, time) VALUES (?, ?)", [JSON.stringify(queue), Date.now()]);
 }
 
+// Functions that recover the state, chat, history and queue from the database
 function recoverState(callback) {
   db.get("SELECT * FROM state ORDER BY rowid DESC LIMIT 1", [], (err, row) => {
     console.log("recoverState row", row);
@@ -130,10 +132,12 @@ async function playNext() {
   var track = null;
   try {
     if (queue.length > 0) {
+      // get the first track from the queue, updating it and saving it
       console.log("Pull track from the queue");
       track = queue.shift();
       storeQueue(queue);
     } else {
+      // get a random track, queue remains empty, so no need to update it
       console.log("Get random next track");
       track = await getTrack(between(100, 3000));
     }
@@ -149,7 +153,7 @@ async function playNext() {
     return;
   }
 
-  console.log("playNext track", track);
+
   currentState.started = Date.now();
   currentState.track = track;
   currentState.length = track.data.attributes.metadata.length;
@@ -222,25 +226,32 @@ function parseCmd(socket, data) {
   }
 
   const cmd = args.shift().slice(1);
-  // let cmd = args[0].slice(1);
+
   switch (cmd) {
     case 'p':
     case 'play':
-      // play a args[1] track
-      socket.emit('message', botMessage(`Finding track ${args[0]} ...`));
-      cmdPlay(socket, args);
+      // Adds a song to the end of a track
+      // Can be done using the track id or the track name
+      // Min length of 2
+      if (args.length < 2) {
+        socket.emit('message', botMessage(`Command missing args: ${data.message}`));
+      }else{
+        socket.emit('message', botMessage(`Finding track ${args[0]} ...`));
+        cmdPlay(socket, args);
+      }
       break;
     
     case 'n':
     case 'next':
-        // play a args[1] track
+        // Skips the current track and plays the next one
+        // Min length of 1
         socket.emit('message', botMessage(`Play next track`));
         playNext();
         break;
 
     case 'q':
     case 'queue':
-      // show the queue
+      // Show the queue
       console.log("queue", queue);
       cmdShowQueue(socket) 
       break;
@@ -251,6 +262,7 @@ function parseCmd(socket, data) {
 }
 
 /*
+!MOST OF THESE DO NOT WORK
 cmds: /play formaviva.com/2390/shoshin
 cmds: /p 2390/shoshin
 cmds: /p kundi - shoshin
@@ -272,10 +284,7 @@ async function cmdShowQueue(socket) {
 }
 
 async function cmdPlay(socket, args) {
-  // check if valid track
-  // if ()
   console.log("cmdPlay", args);
-
   let track = null;
 
   if (isNumeric(args[0])) {
@@ -293,21 +302,11 @@ async function cmdPlay(socket, args) {
     socket.emit('message', botMessage(`No such ${args[0]} track.`));
   }
   // make async
+  // Why?
 
   console.log("queue", queue);
 }
 
-/*
-function getTrack(trackId) {
-  request({
-    url: 'https://api.formaviva.com/api/v1/tracks/14120',
-    json: true
-  }, function(error, response, body) {
-    console.log(body);
-  });
-
-}
-*/
 
 async function getTrack(trackId) {
   try {
@@ -377,11 +376,9 @@ socketio.on('connection', function (socket) {
     socket.userName = userName;
     users.push(userName);
 
-    // socketio.sockets.emit('message', botMessage("A comrade " + userName + " joined the chat"));
     // notice it is not socket.emit('refreshUserList', users)
     socketio.sockets.emit('refreshUserList', users);
 
-    // storeLog("event", { action: "joined", user: userName });
     var data = {
       action: "joined",
       userName: "FormaBot",
@@ -444,7 +441,8 @@ initializeDatabase();
 
 
 async function initializePlayer() {
-  console.log("pizdo");
+  // Recover the state from the database
+  console.log("Recovering state...");
   await new Promise((resolve, reject) => {
     recoverState(function(state) {
       if (state) {
@@ -453,24 +451,30 @@ async function initializePlayer() {
       resolve();
     });
   });
+  console.log("Recovered state", currentState);
 
-  console.log("mater"); //? Primerno???
+  // Recover the chat from the database
+  console.log("Recovering chat...");
   await new Promise((resolve, reject) => {
     recoverChats(function(chat) {
       socketio.emit('message', chat);
       resolve();
     });
   });
+  console.log("Recovered chat");
 
-  console.log("jebemo");
+  // Recover the history from the database
+  console.log("Recovering history...");
   await new Promise((resolve, reject) => {
     recoverHistory(function(type, item) {
       socketio.emit(type, item);
       resolve();
     });
   });
+  console.log("Recovered history");
 
-  console.log("jebemo");
+  // Recover the queue from the database
+  console.log("Recovering queue...");
   await new Promise((resolve, reject) => {
     recoverQueue(function(item) {
       console.log("Recovered queue", item);
@@ -481,7 +485,7 @@ async function initializePlayer() {
       resolve();
     });
   });
-
+  console.log("Recovered queue");
 
   console.log("playNext in initializePlayer");
   // If currentState is still empty, call playNext
