@@ -35,6 +35,13 @@ function storeChat(chat) {
 
 function storeHistory(type, item) {
   db.run("INSERT INTO history (type, item) VALUES (?, ?)", [type, JSON.stringify(item)]);
+  // if there are more than 300 items in the history, remove the oldest one
+  db.get("SELECT COUNT(*) as count FROM history", [], (err, row) => {
+    // remove all but the last 300 items
+    if (row.count > 300) {
+      db.run("DELETE FROM history WHERE rowid NOT IN (SELECT rowid FROM history ORDER BY rowid DESC LIMIT 300)");
+    }
+  });
 }
 
 function storeQueue(queue) {
