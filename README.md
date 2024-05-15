@@ -7,11 +7,17 @@
 [x] fix the bug with empty chat
 [ ] 
 
-[ ] move queue to sqlite db
+[x] move queue to sqlite db
+[x] Check for duplicate userNames
 [ ] add tests
 [ ] open graph tags
-[ ] limit history chat to last 300 messages
-[ ] fix bugs !!
+[x] limit history chat to last 300 messages
+
+BUG FIXES
+[x] Double login
+[x] PlayNext functionality on client side
+[ ] Height of chat elements sometimes too big
+[x] HTML code displaying in chat
 
 # Formaviva LSD player
 

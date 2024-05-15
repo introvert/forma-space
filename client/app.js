@@ -22,15 +22,37 @@
     },
     methods: {
       login: function (userName) {
-        if (!userName.trim()) {  // Check if the username is empty or only contains whitespace
+        if (!userName.trim()) {  
+          // Check if the username is empty or only contains whitespace
           // alert('Finally you have an opportunity to choose a great nickname by yourself and not someone else. Why not do it?');
           return;
         }
 
-        socket.emit("join", userName);
-        this.userName = userName;
-        console.log("username", this.userName);
-        this.userLoggedIn = true;
+        // Await conformations from the server regarding the username
+        new Promise((resolve, reject) => {
+          socket.emit("join", userName);
+          console.log("join", userName);
+
+          // Waits to receive a response from the server, telling it there was an error with the wanted username
+          socket.on('userNameError', function (data) {
+            console.log('userNameError', data);
+            alert(data);
+            resolve();
+          });
+
+          // Waits to receive a response from the server, telling it the username was accepted
+          socket.on('userNameAccepted', function (data) {
+            userName = data;
+            console.log('userNameAccepted 2', data);
+            console.log(this.userName);
+            
+            vue.userName = userName;
+            vue.userLoggedIn = true;
+
+            resolve();    
+            console.log(this.userName);
+          });
+        });
       },
       sendMessage: function (message) {
         if (message.trim() !== "") {
@@ -45,6 +67,13 @@
           const container = this.$refs.chatHistory;
           container.scrollTop = container.scrollHeight;
         });
+      },
+      stopAudio: function () {
+        console.log("Stopping audio");
+        if (this.audioContext) {
+          this.audioContext.close();
+          this.audioContext = null;
+        }
       },
       playAudio: function (url, startTime = 0) {
         console.log("playAudio called");
@@ -232,6 +261,8 @@
             if (data.action == "play") {
               console.log("play the track", data.track);
 
+
+              // WHAT THE FUCK IS THIS CODE
               if (this.track == null) {
                 this.track = data.track;
                 this.trackStarted = data.started;
@@ -244,7 +275,15 @@
                 // );
                 this.playCurrentTrack();
               } else {
-                this.queue.push(data.track);
+                this.stopAudio();
+                var now = Date.now();
+                var elapsed = now - data.started; 
+                var elapsedSeconds = elapsed / 1000; 
+                this.playAudio(
+                  "http://localhost:3000/fwd?url=" +
+                  data.track.data.attributes.low_quality_url, elapsedSeconds
+                  
+                );
               }
             }
           }.bind(this)
