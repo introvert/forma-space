@@ -211,13 +211,6 @@ function storeEmit(socket, type, item) {
 
 function parseCmd(socket, data) {
   let args = data.message.split(" ")
-  //! THERE WAS AN ERROR HERE, AS THE COMMAND n DOES NOT REQUIRE ANY ARGS 
-  if (args.length < 1) {
-    console.log(`Command missing args: ${data.message}`);
-    socket.emit('message', botMessage(`Command missing args: ${data.message}`));
-    // send message back
-    return;
-  }
 
   if (args[0] < 2) {
     console.log(`Command too short ${args[0]}`);
@@ -233,7 +226,7 @@ function parseCmd(socket, data) {
       // Adds a song to the end of a track
       // Can be done using the track id or the track name
       // Min length of 2
-      if (args.length < 2) {
+      if (args.length == 0) {
         socket.emit('message', botMessage(`Command missing args: ${data.message}`));
       }else{
         socket.emit('message', botMessage(`Finding track ${args[0]} ...`));

@@ -302,9 +302,10 @@
                   <span class="bg-gray-600 p-1 px-2 rounded-2xl text-xs"
                     >{{data.userName}}</span
                   >
-                  <span class="bg-gray-900 p-1 px-2 rounded-2xl text-xs"
-                    >{{data.message}}</span
-                  >
+                  <spam 
+                    class="bg-gray-900 p-1 px-2 rounded-2xl text-xs"
+                    v-html="data.message"
+                  ></spam>
                 </li>
               </ul>
             </div>
